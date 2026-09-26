@@ -50,6 +50,41 @@ class KosmosRepository {
     );
   }
 
+  void addNote(String taskId, String note) {
+    final index = _tasks.indexWhere((task) => task.id == taskId);
+
+    if (index == -1) {
+      return;
+    }
+
+    final task = _tasks[index];
+    final now = DateTime.now();
+
+    _tasks[index] = KosmosTask(
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      createdAt: task.createdAt,
+      updatedAt: now,
+      intent: task.intent,
+      condition: task.condition,
+      progressType: task.progressType,
+      progress: task.progress,
+      target: task.target,
+      notes: [...task.notes, note],
+    );
+
+    _events.add(
+      KosmosEvent(
+        id: 'event-${_events.length + 1}',
+        taskId: taskId,
+        type: KosmosEventType.noteAdded,
+        timestamp: now,
+        description: note,
+      ),
+    );
+  }
+
   void _updateCondition(
     String taskId,
     TaskCondition condition,
