@@ -24,6 +24,38 @@ class KosmosRepository {
   }
 
   void startTask(String taskId) {
+    _updateCondition(
+      taskId,
+      TaskCondition.active,
+      KosmosEventType.started,
+      'Task started',
+    );
+  }
+
+  void pauseTask(String taskId) {
+    _updateCondition(
+      taskId,
+      TaskCondition.waiting,
+      KosmosEventType.paused,
+      'Task paused',
+    );
+  }
+
+  void resumeTask(String taskId) {
+    _updateCondition(
+      taskId,
+      TaskCondition.active,
+      KosmosEventType.resumed,
+      'Task resumed',
+    );
+  }
+
+  void _updateCondition(
+    String taskId,
+    TaskCondition condition,
+    KosmosEventType eventType,
+    String description,
+  ) {
     final index = _tasks.indexWhere((task) => task.id == taskId);
 
     if (index == -1) {
@@ -40,7 +72,7 @@ class KosmosRepository {
       createdAt: task.createdAt,
       updatedAt: now,
       intent: task.intent,
-      condition: TaskCondition.active,
+      condition: condition,
       progressType: task.progressType,
       progress: task.progress,
       target: task.target,
@@ -51,9 +83,9 @@ class KosmosRepository {
       KosmosEvent(
         id: 'event-${_events.length + 1}',
         taskId: taskId,
-        type: KosmosEventType.started,
+        type: eventType,
         timestamp: now,
-        description: 'Task started',
+        description: description,
       ),
     );
   }

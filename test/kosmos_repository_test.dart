@@ -49,4 +49,34 @@ void main() {
     expect(history[0].type, KosmosEventType.created);
     expect(history[1].type, KosmosEventType.started);
   });
+
+  test('pausing and resuming a task preserves its history', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    final task = KosmosTask(
+      id: 'task-003',
+      title: 'Build history system',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    repository.addTask(task);
+    repository.startTask('task-003');
+    repository.pauseTask('task-003');
+
+    expect(repository.tasks.first.condition, TaskCondition.waiting);
+
+    repository.resumeTask('task-003');
+
+    expect(repository.tasks.first.condition, TaskCondition.active);
+
+    final history = repository.historyFor('task-003');
+
+    expect(history.length, 4);
+    expect(history[0].type, KosmosEventType.created);
+    expect(history[1].type, KosmosEventType.started);
+    expect(history[2].type, KosmosEventType.paused);
+    expect(history[3].type, KosmosEventType.resumed);
+  });
 }
