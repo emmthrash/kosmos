@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kosmos/models/kosmos_task.dart';
 import 'package:kosmos/models/kosmos_event.dart';
+import 'package:kosmos/models/kosmos_task.dart';
 import 'package:kosmos/services/kosmos_repository.dart';
 
 void main() {
@@ -25,5 +25,28 @@ void main() {
     expect(history.length, 1);
     expect(history.first.type, KosmosEventType.created);
     expect(history.first.taskId, 'task-001');
+  });
+
+  test('starting a task changes its condition and records history', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    final task = KosmosTask(
+      id: 'task-002',
+      title: 'Build KOSMOS',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    repository.addTask(task);
+    repository.startTask('task-002');
+
+    expect(repository.tasks.first.condition, TaskCondition.active);
+
+    final history = repository.historyFor('task-002');
+
+    expect(history.length, 2);
+    expect(history[0].type, KosmosEventType.created);
+    expect(history[1].type, KosmosEventType.started);
   });
 }

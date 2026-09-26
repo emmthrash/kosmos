@@ -23,6 +23,41 @@ class KosmosRepository {
     );
   }
 
+  void startTask(String taskId) {
+    final index = _tasks.indexWhere((task) => task.id == taskId);
+
+    if (index == -1) {
+      return;
+    }
+
+    final task = _tasks[index];
+    final now = DateTime.now();
+
+    _tasks[index] = KosmosTask(
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      createdAt: task.createdAt,
+      updatedAt: now,
+      intent: task.intent,
+      condition: TaskCondition.active,
+      progressType: task.progressType,
+      progress: task.progress,
+      target: task.target,
+      notes: task.notes,
+    );
+
+    _events.add(
+      KosmosEvent(
+        id: 'event-${_events.length + 1}',
+        taskId: taskId,
+        type: KosmosEventType.started,
+        timestamp: now,
+        description: 'Task started',
+      ),
+    );
+  }
+
   List<KosmosEvent> historyFor(String taskId) {
     return List.unmodifiable(
       _events.where((event) => event.taskId == taskId),
