@@ -1,18 +1,6 @@
-enum TaskIntent {
-  pursuing,
-  paused,
-  parked,
-  dropped,
-  completed,
-}
+enum TaskIntent { pursuing, parked, dropped, completed }
 
-enum TaskCondition {
-  ready,
-  active,
-  waiting,
-  blocked,
-  unavailable,
-}
+enum TaskCondition { ready, active, waiting, blocked, unavailable }
 
 enum ProgressType {
   none,

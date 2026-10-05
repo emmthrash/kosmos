@@ -4,6 +4,9 @@ enum KosmosEventType {
   started,
   paused,
   resumed,
+  completed,
+  parked,
+  unparked,
   noteAdded,
 }
 
