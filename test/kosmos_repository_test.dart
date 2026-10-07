@@ -726,4 +726,122 @@ void main() {
     expect(attention[1].id, 'task-020');
   });
 
+  test(
+    'choosing an attention task selects the least recently updated task',
+    () {
+      final repository = KosmosRepository();
+
+      final older = DateTime(2026, 10, 1);
+      final newer = DateTime(2026, 10, 5);
+
+      repository.addTask(
+        KosmosTask(
+          id: 'task-023',
+          title: 'Older task',
+          createdAt: older,
+          updatedAt: older,
+          intent: TaskIntent.pursuing,
+          condition: TaskCondition.ready,
+        ),
+      );
+
+      repository.addTask(
+        KosmosTask(
+          id: 'task-024',
+          title: 'Newer task',
+          createdAt: newer,
+          updatedAt: newer,
+          intent: TaskIntent.pursuing,
+          condition: TaskCondition.ready,
+        ),
+      );
+
+      final selected = repository.chooseAttentionTask();
+
+      expect(selected, isNotNull);
+      expect(selected!.id, 'task-023');
+    },
+  );
+
+  test('choosing an attention task returns null when none need attention', () {
+    final repository = KosmosRepository();
+
+    final selected = repository.chooseAttentionTask();
+
+    expect(selected, isNull);
+  });
+
+  test('chosen attention task can be started', () {
+    final repository = KosmosRepository();
+
+    final createdAt = DateTime(2026, 10, 1);
+    final updatedAt = DateTime(2026, 10, 1);
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-025',
+        title: 'Task to start',
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    final selected = repository.chooseAttentionTask();
+
+    expect(selected, isNotNull);
+    expect(selected!.condition, TaskCondition.ready);
+
+    repository.startTask(selected.id);
+
+    final startedTask = repository.taskById(selected.id);
+
+    expect(startedTask, isNotNull);
+    expect(startedTask!.condition, TaskCondition.active);
+
+    final history = repository.historyFor(selected.id);
+
+    expect(history.length, 2);
+    expect(history[0].type, KosmosEventType.created);
+    expect(history[1].type, KosmosEventType.started);
+  });
+
+  test('a started task can receive a note in the loop', () {
+    final repository = KosmosRepository();
+
+    final createdAt = DateTime(2026, 10, 1);
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-026',
+        title: 'Loop task',
+        createdAt: createdAt,
+        updatedAt: createdAt,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    final selected = repository.chooseAttentionTask();
+
+    expect(selected, isNotNull);
+
+    repository.startTask(selected!.id);
+    repository.addNote(selected.id, 'Started working on the task.');
+
+    final task = repository.taskById(selected.id);
+
+    expect(task, isNotNull);
+    expect(task!.condition, TaskCondition.active);
+    expect(task.notes, ['Started working on the task.']);
+
+    final history = repository.historyFor(selected.id);
+
+    expect(history.length, 3);
+    expect(history[0].type, KosmosEventType.created);
+    expect(history[1].type, KosmosEventType.started);
+    expect(history[2].type, KosmosEventType.noteAdded);
+    expect(history[2].description, 'Started working on the task.');
+  });
 }

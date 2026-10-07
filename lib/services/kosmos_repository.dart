@@ -351,6 +351,19 @@ class KosmosRepository {
     );
   }
 
+  KosmosTask? chooseAttentionTask() {
+    final candidates = tasksNeedingAttention();
+
+    if (candidates.isEmpty) {
+      return null;
+    }
+
+    return candidates.reduce(
+      (oldest, task) =>
+          task.updatedAt.isBefore(oldest.updatedAt) ? task : oldest,
+    );
+  }
+
   List<KosmosEvent> historyFor(String taskId) {
     return List.unmodifiable(_events.where((event) => event.taskId == taskId));
   }
