@@ -670,4 +670,60 @@ void main() {
       expect(waiting, isEmpty);
     },
   );
+
+  test('tasks needing attention are pursuing and ready or active', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-019',
+        title: 'Ready mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-020',
+        title: 'Active mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.active,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-021',
+        title: 'Waiting mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.waiting,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-022',
+        title: 'Parked mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.parked,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    final attention = repository.tasksNeedingAttention();
+
+    expect(attention.length, 2);
+    expect(attention[0].id, 'task-019');
+    expect(attention[1].id, 'task-020');
+  });
+
 }

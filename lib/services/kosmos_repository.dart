@@ -340,6 +340,17 @@ class KosmosRepository {
     );
   }
 
+  List<KosmosTask> tasksNeedingAttention() {
+    return List.unmodifiable(
+      _tasks.where(
+        (task) =>
+            task.intent == TaskIntent.pursuing &&
+            (task.condition == TaskCondition.ready ||
+                task.condition == TaskCondition.active),
+      ),
+    );
+  }
+
   List<KosmosEvent> historyFor(String taskId) {
     return List.unmodifiable(_events.where((event) => event.taskId == taskId));
   }
