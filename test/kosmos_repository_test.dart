@@ -953,4 +953,34 @@ void main() {
 
     expect(choice, isNull);
   });
+
+  test('a blocked task can become actionable again', () {
+    final repository = KosmosRepository();
+
+    final time = DateTime(2026, 10, 1);
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-034',
+        title: 'Recoverable task',
+        createdAt: time,
+        updatedAt: time,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.blocked,
+      ),
+    );
+
+    // CHECK: blocked task is not actionable.
+    expect(repository.chooseAttentionTask(), isNull);
+
+    // Situation changes: the task becomes ready.
+    repository.changeCondition('task-034', TaskCondition.ready);
+
+    // CHECK again: the task is now actionable.
+    final choice = repository.chooseAttentionTask();
+
+    expect(choice, isNotNull);
+    expect(choice!.id, 'task-034');
+    expect(choice.condition, TaskCondition.ready);
+  });
 }
