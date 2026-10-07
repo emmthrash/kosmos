@@ -320,6 +320,26 @@ class KosmosRepository {
     );
   }
 
+  KosmosTask? taskById(String taskId) {
+    for (final task in _tasks) {
+      if (task.id == taskId) {
+        return task;
+      }
+    }
+
+    return null;
+  }
+
+  List<KosmosTask> tasksByIntent(TaskIntent intent) {
+    return List.unmodifiable(_tasks.where((task) => task.intent == intent));
+  }
+
+  List<KosmosTask> tasksByCondition(TaskCondition condition) {
+    return List.unmodifiable(
+      _tasks.where((task) => task.condition == condition),
+    );
+  }
+
   List<KosmosEvent> historyFor(String taskId) {
     return List.unmodifiable(_events.where((event) => event.taskId == taskId));
   }

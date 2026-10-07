@@ -534,4 +534,140 @@ void main() {
     expect(history[1].type, KosmosEventType.changed);
     expect(history[1].description, 'Condition changed to ready');
   });
+
+  test('retrieving a task by id returns the correct task', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-011',
+        title: 'Build KOSMOS',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-012',
+        title: 'Study networking',
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+
+    final task = repository.taskById('task-012');
+
+    expect(task, isNotNull);
+    expect(task!.id, 'task-012');
+    expect(task.title, 'Study networking');
+  });
+
+  test('retrieving an unknown task id returns null', () {
+    final repository = KosmosRepository();
+
+    final task = repository.taskById('does-not-exist');
+
+    expect(task, isNull);
+  });
+
+  test('retrieving tasks by intent returns only matching tasks', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-013',
+        title: 'Active mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.pursuing,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-014',
+        title: 'Parked mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.parked,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-015',
+        title: 'Completed mission',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.completed,
+      ),
+    );
+
+    final pursuing = repository.tasksByIntent(TaskIntent.pursuing);
+
+    expect(pursuing.length, 1);
+    expect(pursuing.first.id, 'task-013');
+  });
+
+  test('retrieving tasks by intent returns an empty list when none match', () {
+    final repository = KosmosRepository();
+
+    final completed = repository.tasksByIntent(TaskIntent.completed);
+
+    expect(completed, isEmpty);
+  });
+
+  test('retrieving tasks by condition returns only matching tasks', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-016',
+        title: 'Ready task',
+        createdAt: now,
+        updatedAt: now,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-017',
+        title: 'Active task',
+        createdAt: now,
+        updatedAt: now,
+        condition: TaskCondition.active,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-018',
+        title: 'Blocked task',
+        createdAt: now,
+        updatedAt: now,
+        condition: TaskCondition.blocked,
+      ),
+    );
+
+    final active = repository.tasksByCondition(TaskCondition.active);
+
+    expect(active.length, 1);
+    expect(active.first.id, 'task-017');
+  });
+
+  test(
+    'retrieving tasks by condition returns an empty list when none match',
+    () {
+      final repository = KosmosRepository();
+
+      final waiting = repository.tasksByCondition(TaskCondition.waiting);
+
+      expect(waiting, isEmpty);
+    },
+  );
 }
