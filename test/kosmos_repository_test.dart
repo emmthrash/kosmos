@@ -889,4 +889,68 @@ void main() {
     expect(secondChoice, isNotNull);
     expect(secondChoice!.id, 'task-028');
   });
+  test('attention choice ignores tasks that cannot be acted on', () {
+    final repository = KosmosRepository();
+
+    final time = DateTime(2026, 10, 1);
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-029',
+        title: 'Parked task',
+        createdAt: time,
+        updatedAt: time,
+        intent: TaskIntent.parked,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-030',
+        title: 'Dropped task',
+        createdAt: time,
+        updatedAt: time,
+        intent: TaskIntent.dropped,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-031',
+        title: 'Completed task',
+        createdAt: time,
+        updatedAt: time,
+        intent: TaskIntent.completed,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-032',
+        title: 'Waiting task',
+        createdAt: time,
+        updatedAt: time,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.waiting,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-033',
+        title: 'Blocked task',
+        createdAt: time,
+        updatedAt: time,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.blocked,
+      ),
+    );
+
+    final choice = repository.chooseAttentionTask();
+
+    expect(choice, isNull);
+  });
 }
