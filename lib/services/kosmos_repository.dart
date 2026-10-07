@@ -169,6 +169,47 @@ class KosmosRepository {
     );
   }
 
+  void updateTask(
+    String taskId, {
+    String? title,
+    String? description,
+    ProgressType? progressType,
+    double? target,
+  }) {
+    final index = _tasks.indexWhere((task) => task.id == taskId);
+
+    if (index == -1) {
+      return;
+    }
+
+    final task = _tasks[index];
+    final now = DateTime.now();
+
+    _tasks[index] = KosmosTask(
+      id: task.id,
+      title: title ?? task.title,
+      description: description ?? task.description,
+      createdAt: task.createdAt,
+      updatedAt: now,
+      intent: task.intent,
+      condition: task.condition,
+      progressType: progressType ?? task.progressType,
+      progress: task.progress,
+      target: target ?? task.target,
+      notes: task.notes,
+    );
+
+    _events.add(
+      KosmosEvent(
+        id: 'event-${_events.length + 1}',
+        taskId: taskId,
+        type: KosmosEventType.changed,
+        timestamp: now,
+        description: 'Task updated',
+      ),
+    );
+  }
+
   void updateProgress(String taskId, double progress) {
     final index = _tasks.indexWhere((task) => task.id == taskId);
 

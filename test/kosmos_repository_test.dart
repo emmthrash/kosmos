@@ -27,7 +27,51 @@ void main() {
     expect(history.first.taskId, 'task-001');
   });
 
-    test('parking an active task preserves its condition for now', () {
+  test('updating a task changes its basic details and records history', () {
+    final repository = KosmosRepository();
+    final now = DateTime.now();
+
+    final task = KosmosTask(
+      id: 'task-010',
+      title: 'Old title',
+      description: 'Old description',
+      createdAt: now,
+      updatedAt: now,
+      progressType: ProgressType.quantity,
+      target: 10,
+    );
+
+    repository.addTask(task);
+
+    repository.updateTask(
+      'task-010',
+      title: 'New title',
+      description: 'New description',
+      progressType: ProgressType.milestone,
+      target: 5,
+    );
+
+    final updatedTask = repository.tasks.first;
+
+    expect(updatedTask.title, 'New title');
+    expect(updatedTask.description, 'New description');
+    expect(updatedTask.progressType, ProgressType.milestone);
+    expect(updatedTask.target, 5);
+
+    expect(updatedTask.intent, TaskIntent.pursuing);
+    expect(updatedTask.condition, TaskCondition.ready);
+    expect(updatedTask.progress, isNull);
+    expect(updatedTask.notes, isEmpty);
+
+    final history = repository.historyFor('task-010');
+
+    expect(history.length, 2);
+    expect(history[0].type, KosmosEventType.created);
+    expect(history[1].type, KosmosEventType.changed);
+    expect(history[1].description, 'Task updated');
+  });
+
+  test('parking an active task preserves its condition for now', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -166,7 +210,7 @@ void main() {
     expect(history[2].type, KosmosEventType.completed);
     expect(history[2].description, 'Task completed');
   });
-    test('parking a task changes its intent and records history', () {
+  test('parking a task changes its intent and records history', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -191,7 +235,7 @@ void main() {
     expect(history[1].description, 'Task parked');
   });
 
-    test('unparking a task returns its intent to pursuing', () {
+  test('unparking a task returns its intent to pursuing', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -218,7 +262,7 @@ void main() {
     expect(history[2].description, 'Task unparked');
   });
 
-    test('task survives a complete lifecycle with full history', () {
+  test('task survives a complete lifecycle with full history', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -257,7 +301,7 @@ void main() {
     expect(history[6].type, KosmosEventType.started);
     expect(history[7].type, KosmosEventType.completed);
   });
-      test('updating progress changes progress and records history', () {
+  test('updating progress changes progress and records history', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -287,12 +331,9 @@ void main() {
     expect(history.length, 2);
     expect(history[0].type, KosmosEventType.created);
     expect(history[1].type, KosmosEventType.changed);
-    expect(
-      history[1].description,
-      'Progress updated from 3.0 to 5.0',
-    );
+    expect(history[1].description, 'Progress updated from 3.0 to 5.0');
   });
-      test('progress can exceed its target without completing the task', () {
+  test('progress can exceed its target without completing the task', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -321,13 +362,10 @@ void main() {
 
     expect(history.length, 2);
     expect(history[1].type, KosmosEventType.changed);
-    expect(
-      history[1].description,
-      'Progress updated from 10.0 to 12.0',
-    );
+    expect(history[1].description, 'Progress updated from 10.0 to 12.0');
   });
 
-      test('progress can move backward without changing task completion state', () {
+  test('progress can move backward without changing task completion state', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -356,13 +394,10 @@ void main() {
 
     expect(history.length, 2);
     expect(history[1].type, KosmosEventType.changed);
-    expect(
-      history[1].description,
-      'Progress updated from 12.0 to 8.0',
-    );
+    expect(history[1].description, 'Progress updated from 12.0 to 8.0');
   });
 
-      test('a task can have zero progress without being completed', () {
+  test('a task can have zero progress without being completed', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -390,7 +425,7 @@ void main() {
     expect(history.length, 1);
     expect(history[0].type, KosmosEventType.created);
   });
-      test('a pursuing task can be blocked without being completed or parked', () {
+  test('a pursuing task can be blocked without being completed or parked', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -418,7 +453,7 @@ void main() {
     expect(history[0].type, KosmosEventType.created);
   });
 
-   test('a blocked task can receive progress without becoming ready', () {
+  test('a blocked task can receive progress without becoming ready', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -441,7 +476,7 @@ void main() {
     expect(currentTask.condition, TaskCondition.blocked);
     expect(currentTask.progress, 1);
   });
-      test('condition can be changed without changing intent', () {
+  test('condition can be changed without changing intent', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -456,10 +491,7 @@ void main() {
 
     repository.addTask(task);
 
-    repository.changeCondition(
-      'task-016',
-      TaskCondition.blocked,
-    );
+    repository.changeCondition('task-016', TaskCondition.blocked);
 
     final currentTask = repository.tasks.first;
 
@@ -470,13 +502,10 @@ void main() {
 
     expect(history.length, 2);
     expect(history[1].type, KosmosEventType.changed);
-    expect(
-      history[1].description,
-      'Condition changed to blocked',
-    );
+    expect(history[1].description, 'Condition changed to blocked');
   });
 
-      test('a blocked task can return to ready', () {
+  test('a blocked task can return to ready', () {
     final repository = KosmosRepository();
     final now = DateTime.now();
 
@@ -491,10 +520,7 @@ void main() {
 
     repository.addTask(task);
 
-    repository.changeCondition(
-      'task-017',
-      TaskCondition.ready,
-    );
+    repository.changeCondition('task-017', TaskCondition.ready);
 
     final currentTask = repository.tasks.first;
 
@@ -506,10 +532,6 @@ void main() {
     expect(history.length, 2);
     expect(history[0].type, KosmosEventType.created);
     expect(history[1].type, KosmosEventType.changed);
-    expect(
-      history[1].description,
-      'Condition changed to ready',
-    );
+    expect(history[1].description, 'Condition changed to ready');
   });
-
 }
