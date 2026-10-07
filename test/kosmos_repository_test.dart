@@ -844,4 +844,49 @@ void main() {
     expect(history[2].type, KosmosEventType.noteAdded);
     expect(history[2].description, 'Started working on the task.');
   });
+
+  test('after acting on one task, the next check can choose another task', () {
+    final repository = KosmosRepository();
+
+    final firstTime = DateTime(2026, 10, 1);
+    final secondTime = DateTime(2026, 10, 2);
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-027',
+        title: 'First task',
+        createdAt: firstTime,
+        updatedAt: firstTime,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'task-028',
+        title: 'Second task',
+        createdAt: secondTime,
+        updatedAt: secondTime,
+        intent: TaskIntent.pursuing,
+        condition: TaskCondition.ready,
+      ),
+    );
+
+    // First CHECK → CHOOSE.
+    final firstChoice = repository.chooseAttentionTask();
+
+    expect(firstChoice, isNotNull);
+    expect(firstChoice!.id, 'task-027');
+
+    // DO → NOTE.
+    repository.startTask(firstChoice.id);
+    repository.addNote(firstChoice.id, 'First cycle completed.');
+
+    // REPEAT → CHECK → CHOOSE again.
+    final secondChoice = repository.chooseAttentionTask();
+
+    expect(secondChoice, isNotNull);
+    expect(secondChoice!.id, 'task-028');
+  });
 }
