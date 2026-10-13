@@ -65,107 +65,29 @@ class KosmosRepository {
   }
 
   void completeTask(String taskId) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
-
-    if (index == -1) {
-      return;
-    }
-
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
+    _updateTaskState(
+      taskId,
       intent: TaskIntent.completed,
-      condition: task.condition,
-      progressType: task.progressType,
-      progress: task.progress,
-      target: task.target,
-      notes: task.notes,
-    );
-
-    _events.add(
-      KosmosEvent(
-        id: 'event-${_events.length + 1}',
-        taskId: taskId,
-        type: KosmosEventType.completed,
-        timestamp: now,
-        description: 'Task completed',
-      ),
+      eventType: KosmosEventType.completed,
+      description: 'Task completed',
     );
   }
 
   void parkTask(String taskId) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
-
-    if (index == -1) {
-      return;
-    }
-
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
+    _updateTaskState(
+      taskId,
       intent: TaskIntent.parked,
-      condition: task.condition,
-      progressType: task.progressType,
-      progress: task.progress,
-      target: task.target,
-      notes: task.notes,
-    );
-
-    _events.add(
-      KosmosEvent(
-        id: 'event-${_events.length + 1}',
-        taskId: taskId,
-        type: KosmosEventType.parked,
-        timestamp: now,
-        description: 'Task parked',
-      ),
+      eventType: KosmosEventType.parked,
+      description: 'Task parked',
     );
   }
 
   void unparkTask(String taskId) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
-
-    if (index == -1) {
-      return;
-    }
-
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
+    _updateTaskState(
+      taskId,
       intent: TaskIntent.pursuing,
-      condition: task.condition,
-      progressType: task.progressType,
-      progress: task.progress,
-      target: task.target,
-      notes: task.notes,
-    );
-
-    _events.add(
-      KosmosEvent(
-        id: 'event-${_events.length + 1}',
-        taskId: taskId,
-        type: KosmosEventType.unparked,
-        timestamp: now,
-        description: 'Task unparked',
-      ),
+      eventType: KosmosEventType.unparked,
+      description: 'Task unparked',
     );
   }
 
@@ -176,107 +98,59 @@ class KosmosRepository {
     ProgressType? progressType,
     double? target,
   }) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
+    final task = taskById(taskId);
 
-    if (index == -1) {
+    if (task == null) {
       return;
     }
 
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: title ?? task.title,
-      description: description ?? task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
-      intent: task.intent,
-      condition: task.condition,
-      progressType: progressType ?? task.progressType,
-      progress: task.progress,
-      target: target ?? task.target,
-      notes: task.notes,
-    );
-
-    _events.add(
-      KosmosEvent(
-        id: 'event-${_events.length + 1}',
-        taskId: taskId,
-        type: KosmosEventType.changed,
-        timestamp: now,
-        description: 'Task updated',
+    _replaceTask(
+      task,
+      task.copyWith(
+        title: title,
+        description: description ?? task.description,
+        progressType: progressType,
+        target: target,
+        updatedAt: DateTime.now(),
       ),
+      eventType: KosmosEventType.changed,
+      description: 'Task updated',
     );
   }
 
   void updateProgress(String taskId, double progress) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
+    final task = taskById(taskId);
 
-    if (index == -1) {
+    if (task == null) {
       return;
     }
 
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
-      intent: task.intent,
-      condition: task.condition,
-      progressType: task.progressType,
-      progress: progress,
-      target: task.target,
-      notes: task.notes,
-    );
-
-    _events.add(
-      KosmosEvent(
-        id: 'event-${_events.length + 1}',
-        taskId: taskId,
-        type: KosmosEventType.changed,
-        timestamp: now,
-        description: 'Progress updated from ${task.progress} to $progress',
+    _replaceTask(
+      task,
+      task.copyWith(
+        progress: progress,
+        updatedAt: DateTime.now(),
       ),
+      eventType: KosmosEventType.changed,
+      description: 'Progress updated from ${task.progress} to $progress',
     );
   }
 
   void addNote(String taskId, String note) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
+    final task = taskById(taskId);
 
-    if (index == -1) {
+    if (task == null) {
       return;
     }
 
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
-      intent: task.intent,
-      condition: task.condition,
-      progressType: task.progressType,
-      progress: task.progress,
-      target: task.target,
-      notes: [...task.notes, note],
-    );
-
-    _events.add(
-      KosmosEvent(
-        id: 'event-${_events.length + 1}',
-        taskId: taskId,
-        type: KosmosEventType.noteAdded,
-        timestamp: now,
-        description: note,
+    _replaceTask(
+      task,
+      task.copyWith(
+        notes: [...task.notes, note],
+        updatedAt: DateTime.now(),
       ),
+      eventType: KosmosEventType.noteAdded,
+      description: note,
     );
   }
 
@@ -286,33 +160,65 @@ class KosmosRepository {
     KosmosEventType eventType,
     String description,
   ) {
-    final index = _tasks.indexWhere((task) => task.id == taskId);
+    final task = taskById(taskId);
+
+    if (task == null) {
+      return;
+    }
+
+    _replaceTask(
+      task,
+      task.copyWith(
+        condition: condition,
+        updatedAt: DateTime.now(),
+      ),
+      eventType: eventType,
+      description: description,
+    );
+  }
+
+  void _updateTaskState(
+    String taskId, {
+    required TaskIntent intent,
+    required KosmosEventType eventType,
+    required String description,
+  }) {
+    final task = taskById(taskId);
+
+    if (task == null) {
+      return;
+    }
+
+    _replaceTask(
+      task,
+      task.copyWith(
+        intent: intent,
+        updatedAt: DateTime.now(),
+      ),
+      eventType: eventType,
+      description: description,
+    );
+  }
+
+  void _replaceTask(
+    KosmosTask oldTask,
+    KosmosTask newTask, {
+    required KosmosEventType eventType,
+    required String description,
+  }) {
+    final index = _tasks.indexWhere((task) => task.id == oldTask.id);
 
     if (index == -1) {
       return;
     }
 
-    final task = _tasks[index];
-    final now = DateTime.now();
-
-    _tasks[index] = KosmosTask(
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      createdAt: task.createdAt,
-      updatedAt: now,
-      intent: task.intent,
-      condition: condition,
-      progressType: task.progressType,
-      progress: task.progress,
-      target: task.target,
-      notes: task.notes,
-    );
+    final now = newTask.updatedAt;
+    _tasks[index] = newTask;
 
     _events.add(
       KosmosEvent(
         id: 'event-${_events.length + 1}',
-        taskId: taskId,
+        taskId: newTask.id,
         type: eventType,
         timestamp: now,
         description: description,

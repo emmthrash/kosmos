@@ -42,4 +42,38 @@ class KosmosTask {
     this.target,
     this.notes = const [],
   });
+
+  KosmosTask copyWith({
+    String? title,
+    Object? description = _unchanged,
+    DateTime? updatedAt,
+    TaskIntent? intent,
+    TaskCondition? condition,
+    ProgressType? progressType,
+    Object? progress = _unchanged,
+    Object? target = _unchanged,
+    List<String>? notes,
+  }) {
+    return KosmosTask(
+      id: id,
+      title: title ?? this.title,
+      description: identical(description, _unchanged)
+          ? this.description
+          : description as String?,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      intent: intent ?? this.intent,
+      condition: condition ?? this.condition,
+      progressType: progressType ?? this.progressType,
+      progress: identical(progress, _unchanged)
+          ? this.progress
+          : progress as double?,
+      target: identical(target, _unchanged)
+          ? this.target
+          : target as double?,
+      notes: notes ?? this.notes,
+    );
+  }
 }
+
+const _unchanged = Object();
