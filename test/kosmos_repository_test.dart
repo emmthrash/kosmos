@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kosmos/models/kosmos_event.dart';
 import 'package:kosmos/models/kosmos_task.dart';
+import 'package:kosmos/models/attention_decision.dart';
 import 'package:kosmos/services/kosmos_repository.dart';
 
 void main() {
@@ -982,5 +983,51 @@ void main() {
     expect(choice, isNotNull);
     expect(choice!.id, 'task-034');
     expect(choice.condition, TaskCondition.ready);
+  });
+
+  test('explains why an attention task was selected', () {
+    final repository = KosmosRepository();
+    final older = DateTime(2026, 10, 1);
+    final newer = DateTime(2026, 10, 5);
+
+    repository.addTask(
+      KosmosTask(
+        id: 'attention-old',
+        title: 'Older eligible task',
+        createdAt: older,
+        updatedAt: older,
+      ),
+    );
+
+    repository.addTask(
+      KosmosTask(
+        id: 'attention-new',
+        title: 'Newer eligible task',
+        createdAt: newer,
+        updatedAt: newer,
+      ),
+    );
+
+    final decision = repository.chooseAttentionDecision();
+
+    expect(decision.hasSelection, isTrue);
+    expect(decision.task?.id, 'attention-old');
+    expect(decision.reason, AttentionDecisionReason.leastRecentlyUpdated);
+    expect(
+      decision.explanation,
+      'Selected because this is the least recently updated eligible task.',
+    );
+    expect(repository.chooseAttentionTask()?.id, 'attention-old');
+  });
+
+  test('explains when no task is eligible for attention', () {
+    final repository = KosmosRepository();
+    final decision = repository.chooseAttentionDecision();
+
+    expect(decision.hasSelection, isFalse);
+    expect(decision.task, isNull);
+    expect(decision.reason, AttentionDecisionReason.noEligibleTasks);
+    expect(decision.explanation, 'No eligible tasks need attention right now.');
+    expect(repository.chooseAttentionTask(), isNull);
   });
 }

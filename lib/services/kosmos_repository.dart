@@ -1,3 +1,4 @@
+import '../models/attention_decision.dart';
 import '../models/kosmos_event.dart';
 import '../models/kosmos_task.dart';
 
@@ -127,10 +128,7 @@ class KosmosRepository {
 
     _replaceTask(
       task,
-      task.copyWith(
-        progress: progress,
-        updatedAt: DateTime.now(),
-      ),
+      task.copyWith(progress: progress, updatedAt: DateTime.now()),
       eventType: KosmosEventType.changed,
       description: 'Progress updated from ${task.progress} to $progress',
     );
@@ -145,10 +143,7 @@ class KosmosRepository {
 
     _replaceTask(
       task,
-      task.copyWith(
-        notes: [...task.notes, note],
-        updatedAt: DateTime.now(),
-      ),
+      task.copyWith(notes: [...task.notes, note], updatedAt: DateTime.now()),
       eventType: KosmosEventType.noteAdded,
       description: note,
     );
@@ -168,10 +163,7 @@ class KosmosRepository {
 
     _replaceTask(
       task,
-      task.copyWith(
-        condition: condition,
-        updatedAt: DateTime.now(),
-      ),
+      task.copyWith(condition: condition, updatedAt: DateTime.now()),
       eventType: eventType,
       description: description,
     );
@@ -191,10 +183,7 @@ class KosmosRepository {
 
     _replaceTask(
       task,
-      task.copyWith(
-        intent: intent,
-        updatedAt: DateTime.now(),
-      ),
+      task.copyWith(intent: intent, updatedAt: DateTime.now()),
       eventType: eventType,
       description: description,
     );
@@ -257,17 +246,29 @@ class KosmosRepository {
     );
   }
 
-  KosmosTask? chooseAttentionTask() {
+  AttentionDecision chooseAttentionDecision() {
     final candidates = tasksNeedingAttention();
 
     if (candidates.isEmpty) {
-      return null;
+      return const AttentionDecision(
+        task: null,
+        reason: AttentionDecisionReason.noEligibleTasks,
+      );
     }
 
-    return candidates.reduce(
+    final selected = candidates.reduce(
       (oldest, task) =>
           task.updatedAt.isBefore(oldest.updatedAt) ? task : oldest,
     );
+
+    return AttentionDecision(
+      task: selected,
+      reason: AttentionDecisionReason.leastRecentlyUpdated,
+    );
+  }
+
+  KosmosTask? chooseAttentionTask() {
+    return chooseAttentionDecision().task;
   }
 
   List<KosmosEvent> historyFor(String taskId) {
