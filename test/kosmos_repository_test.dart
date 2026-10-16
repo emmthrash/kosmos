@@ -1014,8 +1014,19 @@ void main() {
     expect(decision.task?.id, 'attention-old');
     expect(decision.reason, AttentionDecisionReason.leastRecentlyUpdated);
     expect(
+      decision.eligibilityExplanation,
+      'Task is pursuing and its condition is ready.',
+    );
+    expect(
+      decision.selectionExplanation,
+      'Chosen because it has the oldest last-updated timestamp '
+      'among eligible tasks.',
+    );
+    expect(
       decision.explanation,
-      'Selected because this is the least recently updated eligible task.',
+      'Task is pursuing and its condition is ready. '
+      'Chosen because it has the oldest last-updated timestamp '
+      'among eligible tasks.',
     );
     expect(repository.chooseAttentionTask()?.id, 'attention-old');
   });
@@ -1027,6 +1038,14 @@ void main() {
     expect(decision.hasSelection, isFalse);
     expect(decision.task, isNull);
     expect(decision.reason, AttentionDecisionReason.noEligibleTasks);
+    expect(
+      decision.eligibilityExplanation,
+      'No task meets the current attention eligibility rules.',
+    );
+    expect(
+      decision.selectionExplanation,
+      'No selection was made because there are no eligible tasks.',
+    );
     expect(decision.explanation, 'No eligible tasks need attention right now.');
     expect(repository.chooseAttentionTask(), isNull);
   });

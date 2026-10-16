@@ -10,12 +10,32 @@ class AttentionDecision {
 
   bool get hasSelection => task != null;
 
-  String get explanation {
+  String get eligibilityExplanation {
+    final selectedTask = task;
+
+    if (selectedTask == null) {
+      return 'No task meets the current attention eligibility rules.';
+    }
+
+    return 'Task is pursuing and its condition is '
+        '${selectedTask.condition.name}.';
+  }
+
+  String get selectionExplanation {
     switch (reason) {
       case AttentionDecisionReason.leastRecentlyUpdated:
-        return 'Selected because this is the least recently updated eligible task.';
+        return 'Chosen because it has the oldest last-updated timestamp '
+            'among eligible tasks.';
       case AttentionDecisionReason.noEligibleTasks:
-        return 'No eligible tasks need attention right now.';
+        return 'No selection was made because there are no eligible tasks.';
     }
+  }
+
+  String get explanation {
+    if (!hasSelection) {
+      return 'No eligible tasks need attention right now.';
+    }
+
+    return '$eligibilityExplanation $selectionExplanation';
   }
 }
