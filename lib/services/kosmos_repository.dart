@@ -1,6 +1,7 @@
 import '../models/attention_decision.dart';
 import '../models/kosmos_event.dart';
 import '../models/kosmos_task.dart';
+import '../models/task_eligibility.dart';
 
 class KosmosRepository {
   final List<KosmosTask> _tasks = [];
@@ -235,14 +236,13 @@ class KosmosRepository {
     );
   }
 
+  TaskEligibility evaluateTaskEligibility(KosmosTask task) {
+    return TaskEligibility.evaluate(task);
+  }
+
   List<KosmosTask> tasksNeedingAttention() {
     return List.unmodifiable(
-      _tasks.where(
-        (task) =>
-            task.intent == TaskIntent.pursuing &&
-            (task.condition == TaskCondition.ready ||
-                task.condition == TaskCondition.active),
-      ),
+      _tasks.where((task) => evaluateTaskEligibility(task).isEligible),
     );
   }
 

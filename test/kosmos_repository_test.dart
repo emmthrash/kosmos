@@ -3,6 +3,7 @@ import 'package:kosmos/models/kosmos_event.dart';
 import 'package:kosmos/models/kosmos_task.dart';
 import 'package:kosmos/models/attention_decision.dart';
 import 'package:kosmos/services/kosmos_repository.dart';
+import 'package:kosmos/models/task_eligibility.dart';
 
 void main() {
   test('adding a task creates a creation history event', () {
@@ -1048,5 +1049,86 @@ void main() {
     );
     expect(decision.explanation, 'No eligible tasks need attention right now.');
     expect(repository.chooseAttentionTask(), isNull);
+  });
+  test('ready and active pursuing tasks are eligible', () {
+    final now = DateTime(2026, 10, 16);
+
+    for (final condition in [TaskCondition.ready, TaskCondition.active]) {
+      final task = KosmosTask(
+        id: 'eligible-${condition.name}',
+        title: '${condition.name} task',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.pursuing,
+        condition: condition,
+      );
+
+      final eligibility = TaskEligibility.evaluate(task);
+
+      expect(eligibility.isEligible, isTrue);
+      expect(
+        eligibility.reason,
+        condition == TaskCondition.ready
+            ? TaskEligibilityReason.eligibleReady
+            : TaskEligibilityReason.eligibleActive,
+      );
+      expect(eligibility.explanation, contains('Task is pursuing'));
+    }
+  });
+
+  test('waiting blocked and unavailable tasks are not eligible', () {
+    final now = DateTime(2026, 10, 16);
+
+    for (final condition in [
+      TaskCondition.waiting,
+      TaskCondition.blocked,
+      TaskCondition.unavailable,
+    ]) {
+      final task = KosmosTask(
+        id: 'ineligible-${condition.name}',
+        title: '${condition.name} task',
+        createdAt: now,
+        updatedAt: now,
+        intent: TaskIntent.pursuing,
+        condition: condition,
+      );
+
+      final eligibility = TaskEligibility.evaluate(task);
+
+      expect(eligibility.isEligible, isFalse);
+      expect(eligibility.reason, TaskEligibilityReason.conditionNotActionable);
+      expect(
+        eligibility.explanation,
+        'Not eligible: task condition is ${condition.name}.',
+      );
+    }
+  });
+
+  test('non-pursuing intents take precedence in eligibility explanations', () {
+    final now = DateTime(2026, 10, 16);
+
+    for (final intent in [
+      TaskIntent.parked,
+      TaskIntent.dropped,
+      TaskIntent.completed,
+    ]) {
+      final task = KosmosTask(
+        id: 'intent-${intent.name}',
+        title: '${intent.name} task',
+        createdAt: now,
+        updatedAt: now,
+        intent: intent,
+        condition: TaskCondition.ready,
+      );
+
+      final eligibility = TaskEligibility.evaluate(task);
+
+      expect(eligibility.isEligible, isFalse);
+      expect(eligibility.reason, TaskEligibilityReason.intentNotPursuing);
+      expect(
+        eligibility.explanation,
+        'Not eligible: task intent is ${intent.name}.',
+      );
+    }
   });
 }

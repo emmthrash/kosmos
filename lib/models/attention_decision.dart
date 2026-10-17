@@ -1,4 +1,5 @@
 import 'package:kosmos/models/kosmos_task.dart';
+import 'package:kosmos/models/task_eligibility.dart';
 
 enum AttentionDecisionReason { leastRecentlyUpdated, noEligibleTasks }
 
@@ -17,8 +18,7 @@ class AttentionDecision {
       return 'No task meets the current attention eligibility rules.';
     }
 
-    return 'Task is pursuing and its condition is '
-        '${selectedTask.condition.name}.';
+    return TaskEligibility.evaluate(selectedTask).explanation;
   }
 
   String get selectionExplanation {
