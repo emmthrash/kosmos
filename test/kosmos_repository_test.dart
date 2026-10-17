@@ -1036,6 +1036,9 @@ void main() {
     final decision = repository.chooseAttentionDecision();
 
     expect(decision.hasSelection, isTrue);
+    expect(decision.selectedCondition, TaskCondition.ready);
+    expect(decision.selectedIntent, TaskIntent.pursuing);
+    expect(decision.awaitingUserChoice, isTrue);
     expect(decision.task?.id, 'attention-old');
     expect(decision.reason, AttentionDecisionReason.leastRecentlyUpdated);
     expect(
@@ -1061,6 +1064,9 @@ void main() {
     final decision = repository.chooseAttentionDecision();
 
     expect(decision.hasSelection, isFalse);
+    expect(decision.selectedCondition, isNull);
+    expect(decision.selectedIntent, isNull);
+    expect(decision.awaitingUserChoice, isFalse);
     expect(decision.task, isNull);
     expect(decision.reason, AttentionDecisionReason.noEligibleTasks);
     expect(

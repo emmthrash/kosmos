@@ -11,6 +11,13 @@ class AttentionDecision {
 
   bool get hasSelection => task != null;
 
+  TaskCondition? get selectedCondition => task?.condition;
+
+  TaskIntent? get selectedIntent => task?.intent;
+
+  /// A selection is informational; it does not start or modify a task.
+  bool get awaitingUserChoice => hasSelection;
+
   String get eligibilityExplanation {
     final selectedTask = task;
 
