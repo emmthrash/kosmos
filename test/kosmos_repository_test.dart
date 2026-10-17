@@ -765,6 +765,30 @@ void main() {
     },
   );
 
+  test('attention selection breaks timestamp ties by task ID', () {
+    final repository = KosmosRepository();
+    final sameTime = DateTime(2026, 10, 1);
+
+    // Add in reverse ID order to prove selection doesn't depend on insertion.
+    for (final id in ['task-z', 'task-a', 'task-m']) {
+      repository.addTask(
+        KosmosTask(
+          id: id,
+          title: id,
+          createdAt: sameTime,
+          updatedAt: sameTime,
+          intent: TaskIntent.pursuing,
+          condition: TaskCondition.ready,
+        ),
+      );
+    }
+
+    final decision = repository.chooseAttentionDecision();
+
+    expect(decision.task?.id, 'task-a');
+    expect(decision.reason, AttentionDecisionReason.leastRecentlyUpdated);
+  });
+
   test('choosing an attention task returns null when none need attention', () {
     final repository = KosmosRepository();
 

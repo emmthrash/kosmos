@@ -256,10 +256,19 @@ class KosmosRepository {
       );
     }
 
-    final selected = candidates.reduce(
-      (oldest, task) =>
-          task.updatedAt.isBefore(oldest.updatedAt) ? task : oldest,
-    );
+    final selected = candidates.reduce((oldest, task) {
+      final timestampComparison = task.updatedAt.compareTo(oldest.updatedAt);
+
+      if (timestampComparison < 0) {
+        return task;
+      }
+
+      if (timestampComparison == 0 && task.id.compareTo(oldest.id) < 0) {
+        return task;
+      }
+
+      return oldest;
+    });
 
     return AttentionDecision(
       task: selected,
