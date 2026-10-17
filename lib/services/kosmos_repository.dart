@@ -1,3 +1,4 @@
+import '../models/attention_assessment.dart';
 import '../models/attention_decision.dart';
 import '../models/kosmos_event.dart';
 import '../models/kosmos_task.dart';
@@ -273,6 +274,17 @@ class KosmosRepository {
     return AttentionDecision(
       task: selected,
       reason: AttentionDecisionReason.leastRecentlyUpdated,
+    );
+  }
+
+  AttentionAssessment assessAttention() {
+    final assessments = _tasks
+        .map(evaluateTaskEligibility)
+        .toList(growable: false);
+
+    return AttentionAssessment(
+      decision: chooseAttentionDecision(),
+      taskAssessments: assessments,
     );
   }
 

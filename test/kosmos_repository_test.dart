@@ -1161,4 +1161,111 @@ void main() {
       );
     }
   });
+  test(
+    'attention assessment includes every task and separates eligibility',
+    () {
+      final repository = KosmosRepository();
+      final now = DateTime(2026, 1, 1);
+
+      repository.addTask(
+        KosmosTask(
+          id: 'eligible-ready',
+          title: 'Ready task',
+          createdAt: now,
+          updatedAt: now,
+          intent: TaskIntent.pursuing,
+          condition: TaskCondition.ready,
+        ),
+      );
+
+      repository.addTask(
+        KosmosTask(
+          id: 'eligible-active',
+          title: 'Active task',
+          createdAt: now,
+          updatedAt: now.add(const Duration(minutes: 1)),
+          intent: TaskIntent.pursuing,
+          condition: TaskCondition.active,
+        ),
+      );
+
+      repository.addTask(
+        KosmosTask(
+          id: 'excluded-blocked',
+          title: 'Blocked task',
+          createdAt: now,
+          updatedAt: now.add(const Duration(minutes: 2)),
+          intent: TaskIntent.pursuing,
+          condition: TaskCondition.blocked,
+        ),
+      );
+
+      repository.addTask(
+        KosmosTask(
+          id: 'excluded-parked',
+          title: 'Parked task',
+          createdAt: now,
+          updatedAt: now.add(const Duration(minutes: 3)),
+          intent: TaskIntent.parked,
+          condition: TaskCondition.ready,
+        ),
+      );
+
+      final assessment = repository.assessAttention();
+
+      expect(assessment.totalCount, 4);
+      expect(assessment.eligibleCount, 2);
+      expect(assessment.excludedCount, 2);
+      expect(
+        assessment.eligibleAssessments.map((item) => item.task.id),
+        containsAll(['eligible-ready', 'eligible-active']),
+      );
+      expect(
+        assessment.excludedAssessments.map((item) => item.task.id),
+        containsAll(['excluded-blocked', 'excluded-parked']),
+      );
+      expect(assessment.decision.task?.id, 'eligible-ready');
+      expect(assessment.summary, '2 of 4 tasks are eligible for attention.');
+    },
+  );
+
+  test('empty attention assessment reports no eligible tasks', () {
+    final repository = KosmosRepository();
+
+    final assessment = repository.assessAttention();
+
+    expect(assessment.totalCount, 0);
+    expect(assessment.eligibleCount, 0);
+    expect(assessment.excludedCount, 0);
+    expect(assessment.decision.hasSelection, isFalse);
+    expect(assessment.summary, '0 of 0 tasks are eligible for attention.');
+  });
+
+  test('attention assessment does not change task state or history', () {
+    final repository = KosmosRepository();
+    final now = DateTime(2026, 1, 1);
+
+    final task = KosmosTask(
+      id: 'assessment-stability',
+      title: 'Preserve task state',
+      createdAt: now,
+      updatedAt: now,
+      intent: TaskIntent.pursuing,
+      condition: TaskCondition.ready,
+    );
+
+    repository.addTask(task);
+
+    final originalIntent = task.intent;
+    final originalCondition = task.condition;
+    final originalUpdatedAt = task.updatedAt;
+    final originalHistoryLength = repository.historyFor(task.id).length;
+
+    repository.assessAttention();
+
+    expect(task.intent, originalIntent);
+    expect(task.condition, originalCondition);
+    expect(task.updatedAt, originalUpdatedAt);
+    expect(repository.historyFor(task.id), hasLength(originalHistoryLength));
+  });
 }
