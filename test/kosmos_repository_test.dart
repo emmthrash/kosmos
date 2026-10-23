@@ -1226,6 +1226,24 @@ void main() {
       );
       expect(assessment.decision.task?.id, 'eligible-ready');
       expect(assessment.summary, '2 of 4 tasks are eligible for attention.');
+      expect(assessment.selectedAssessment?.task.id, 'eligible-ready');
+      expect(
+        assessment.selectedAssessment?.reason,
+        TaskEligibilityReason.eligibleReady,
+      );
+      expect(
+        assessment.selectionExplanation,
+        assessment.decision.selectionExplanation,
+      );
+      expect(
+        assessment.explanation,
+        contains('2 of 4 tasks are eligible for attention.'),
+      );
+      expect(
+        assessment.explanation,
+        contains('Task is pursuing and its condition is ready.'),
+      );
+      expect(assessment.explanation, contains('oldest last-updated timestamp'));
     },
   );
 
@@ -1239,6 +1257,15 @@ void main() {
     expect(assessment.excludedCount, 0);
     expect(assessment.decision.hasSelection, isFalse);
     expect(assessment.summary, '0 of 0 tasks are eligible for attention.');
+    expect(assessment.selectedAssessment, isNull);
+    expect(
+      assessment.explanation,
+      contains('0 of 0 tasks are eligible for attention.'),
+    );
+    expect(
+      assessment.explanation,
+      contains('No eligible tasks need attention right now.'),
+    );
   });
 
   test('attention assessment does not change task state or history', () {

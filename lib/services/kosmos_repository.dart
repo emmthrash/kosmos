@@ -248,8 +248,12 @@ class KosmosRepository {
   }
 
   AttentionDecision chooseAttentionDecision() {
-    final candidates = tasksNeedingAttention();
+    return _chooseAttentionDecisionFromCandidates(tasksNeedingAttention());
+  }
 
+  AttentionDecision _chooseAttentionDecisionFromCandidates(
+    List<KosmosTask> candidates,
+  ) {
     if (candidates.isEmpty) {
       return const AttentionDecision(
         task: null,
@@ -282,12 +286,16 @@ class KosmosRepository {
         .map(evaluateTaskEligibility)
         .toList(growable: false);
 
+    final candidates = assessments
+        .where((assessment) => assessment.isEligible)
+        .map((assessment) => assessment.task)
+        .toList(growable: false);
+
     return AttentionAssessment(
-      decision: chooseAttentionDecision(),
+      decision: _chooseAttentionDecisionFromCandidates(candidates),
       taskAssessments: assessments,
     );
   }
-
   KosmosTask? chooseAttentionTask() {
     return chooseAttentionDecision().task;
   }

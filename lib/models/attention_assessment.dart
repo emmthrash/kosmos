@@ -24,6 +24,23 @@ class AttentionAssessment {
     );
   }
 
+  /// Reuses the eligibility result already captured for the selected task.
+  TaskEligibility? get selectedAssessment {
+    final selectedTask = decision.task;
+
+    if (selectedTask == null) {
+      return null;
+    }
+
+    for (final assessment in taskAssessments) {
+      if (assessment.task.id == selectedTask.id) {
+        return assessment;
+      }
+    }
+
+    return null;
+  }
+
   int get totalCount => taskAssessments.length;
 
   int get eligibleCount => eligibleAssessments.length;
@@ -32,5 +49,18 @@ class AttentionAssessment {
 
   String get summary {
     return '$eligibleCount of $totalCount tasks are eligible for attention.';
+  }
+
+  String get selectionExplanation => decision.selectionExplanation;
+
+  /// Combines the summary, selected task's eligibility, and selection reason.
+  String get explanation {
+    final selected = selectedAssessment;
+
+    if (selected == null) {
+      return '$summary ${decision.explanation}';
+    }
+
+    return '$summary ${selected.explanation} $selectionExplanation';
   }
 }
