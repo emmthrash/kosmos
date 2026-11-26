@@ -143,6 +143,18 @@ class AttentionScreen extends StatefulWidget {
 }
 
 class _AttentionScreenState extends State<AttentionScreen> {
+  Future<void> _createTask() async {
+    final newTask = await showDialog<KosmosTask>(
+      context: context,
+      builder: (_) => const _CreateTaskDialog(),
+    );
+
+    if (!mounted || newTask == null) return;
+
+    widget.repository.addTask(newTask);
+    setState(() {});
+  }
+
   void _startTask(String taskId) {
     widget.repository.startTask(taskId);
     setState(() {});
@@ -173,6 +185,16 @@ class _AttentionScreenState extends State<AttentionScreen> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 36),
               children: [
                 _Header(totalTasks: assessment.totalCount),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    key: const Key('create-task-button'),
+                    onPressed: _createTask,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create task'),
+                  ),
+                ),
                 const SizedBox(height: 32),
                 const _SectionLabel(number: '01', label: 'CHECK'),
                 const SizedBox(height: 12),
@@ -207,6 +229,13 @@ class _AttentionScreenState extends State<AttentionScreen> {
                       icon: Icons.remove_circle_outline,
                     ),
                   ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '${assessment.eligibleCount} of ${assessment.totalCount} '
+                  'tasks are eligible for attention.',
+                  key: const Key('attention-count-summary'),
+                  style: const TextStyle(color: _muted),
                 ),
                 const SizedBox(height: 32),
                 const _SectionLabel(number: '02', label: 'CHOOSE'),
@@ -660,6 +689,104 @@ class _StatusPill extends StatelessWidget {
           letterSpacing: 1,
         ),
       ),
+    );
+  }
+}
+
+class _CreateTaskDialog extends StatefulWidget {
+  const _CreateTaskDialog();
+
+  @override
+  State<_CreateTaskDialog> createState() => _CreateTaskDialogState();
+}
+
+class _CreateTaskDialogState extends State<_CreateTaskDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final now = DateTime.now();
+    final title = _titleController.text.trim();
+    final description = _descriptionController.text.trim();
+
+    final task = KosmosTask(
+      id: 'task-${now.microsecondsSinceEpoch}',
+      title: title,
+      description: description.isEmpty ? null : description,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    Navigator.of(context).pop(task);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Create task'),
+      content: SizedBox(
+        width: 420,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  key: const Key('task-title-field'),
+                  controller: _titleController,
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Task title',
+                    hintText: 'What do you want to do?',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Enter a task title';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  key: const Key('task-description-field'),
+                  controller: _descriptionController,
+                  textCapitalization: TextCapitalization.sentences,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                    hintText: 'Add context if useful',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('confirm-create-task'),
+          onPressed: _submit,
+          child: const Text('Create task'),
+        ),
+      ],
     );
   }
 }

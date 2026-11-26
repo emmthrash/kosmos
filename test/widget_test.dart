@@ -85,6 +85,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('Start task'), 250);
     expect(find.text('Start task'), findsOneWidget);
 
+    await tester.ensureVisible(find.text('Start task'));
     await tester.tap(find.text('Start task'));
     await tester.pumpAndSettle();
 
@@ -94,5 +95,68 @@ void main() {
     );
     expect(find.text('Pause for now'), findsOneWidget);
     expect(repository.historyFor('task-to-start'), hasLength(2));
+  });
+
+  testWidgets('creating a task adds it to the repository and dashboard', (
+    tester,
+  ) async {
+    final repository = KosmosRepository();
+
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(MyApp(repository: repository));
+
+    await tester.tap(find.byKey(const Key('create-task-button')));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('task-title-field')),
+      'Study Dart testing',
+    );
+    await tester.enterText(
+      find.byKey(const Key('task-description-field')),
+      'Practise Flutter widget tests',
+    );
+
+    await tester.tap(find.byKey(const Key('confirm-create-task')));
+    await tester.pumpAndSettle();
+
+    expect(repository.tasks, hasLength(1));
+    expect(repository.tasks.single.title, 'Study Dart testing');
+    expect(
+      repository.tasks.single.description,
+      'Practise Flutter widget tests',
+    );
+    expect(repository.tasks.single.intent, TaskIntent.pursuing);
+    expect(repository.tasks.single.condition, TaskCondition.ready);
+    expect(find.text('Study Dart testing'), findsNWidgets(2));
+    expect(
+      find.text('1 of 1 tasks are eligible for attention.'),
+      findsNWidgets(2),
+    );
+  });
+
+  testWidgets('creating a task rejects a blank title', (tester) async {
+    final repository = KosmosRepository();
+
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(MyApp(repository: repository));
+
+    await tester.tap(find.byKey(const Key('create-task-button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('confirm-create-task')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Enter a task title'), findsOneWidget);
+    expect(repository.tasks, isEmpty);
+    expect(find.byKey(const Key('confirm-create-task')), findsOneWidget);
   });
 }
